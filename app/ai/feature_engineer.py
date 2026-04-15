@@ -16,8 +16,8 @@ def prepare_features():
     df = df.sort_values(['product_name', 'date'])
 
     df['month'] = df['date'].dt.month
-    df['days_of_week'] = df['date'].dt.dayofweek # 0=Lunes, 6=Domingo
-    df['is_weekend'] = df['days_of_week'].apply(lambda x: 1 if x >= 5 else 0)
+    df['day_of_week'] = df['date'].dt.dayofweek # 0=Lunes, 6=Domingo
+    df['is_weekend'] = df['day_of_week'].apply(lambda x: 1 if x >= 5 else 0)
 
     # Creamos columnas con la venta del día anterior (lag_1) y de hace una semana (lag_7)
     df['sales_lag_1'] = df.groupby('product_name')['quantity'].shift(1)
