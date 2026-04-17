@@ -1,0 +1,111 @@
+:root {
+    --deep-navy: #141b41;
+    --corporate-blue: #306bac;
+    --bright-blue: #6f9ceb;
+    --soft-blue: #98b9f2;
+    --tech-violet: #918ef4;
+    --bg-body: #f0f2f5;
+    --white: #ffffff;
+    --main-gradient: linear-gradient(135deg, var(--corporate-blue) 0%, var(--deep-navy) 100%);
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--deep-navy);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.hero {
+    background: var(--main-gradient);
+    color: var(--white);
+    padding: 3rem 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.hero h1 {
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(20, 27, 65, 0.05);
+    background-color: var(--white);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-title-icon {
+    color: var(--tech-violet);
+    margin-right: 10px;
+}
+
+.prediction-box {
+    background: rgba(145, 142, 244, 0.08);
+    border: 1px solid rgba(145, 142, 244, 0.2);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.prediction-label {
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-size: 0.75rem;
+    color: var(--bright-blue);
+}
+
+.prediction-value {
+    color: var(--tech-violet);
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin: 0.5rem 0;
+}
+
+.badge-ai {
+    background-color: var(--tech-violet) !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.chart-container {
+    position: relative;
+    height: 350px;
+    width: 100%;
+}
+
+.form-select-lg {
+    border-radius: 12px;
+    border: 2px solid var(--soft-blue);
+    color: var(--corporate-blue);
+    font-weight: 600;
+}
+
+.form-select-lg:focus {
+    border-color: var(--tech-violet);
+    box-shadow: 0 0 0 0.25rem rgba(145, 142, 244, 0.2);
+}
+
+.main-footer {
+    text-align: center;
+    margin-top: 3rem;
+    margin-bottom: 2rem;
+    color: var(--bright-blue);
+    font-size: 0.85rem;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding-top: 2rem;
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
