@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from pathlib import Path
 from app.database import SessionLocal, engine
 from app.models import Product, DailySale
-from app.ai.predictor import predict_sales
+from app.ai.predictor import predict_sales_range
 
 app = FastAPI(title="StockWise AI Dashboard")
 
@@ -38,21 +38,22 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
 async def get_chart_data(product_id: int, db: Session = Depends(get_db)):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
+        print(f"❌ Error: Producto con ID {product_id} no encontrado")
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
     sales = db.query(DailySale).filter(DailySale.product_id == product_id)\
-              .order_by(DailySale.date.asc()).all()
+              .order_by(DailySale.date.desc()).limit(15).all()
     
-    recent_sales = sales[-30:] if len(sales) > 30 else sales
+    if len(sales) < 7:
+        print(f"⚠️ Error: El producto '{product.name}' solo tiene {len(sales)} ventas. Necesita 7 para la IA.")
+        raise HTTPException(status_code=404, detail="Datos insuficientes")
 
-    if not recent_sales:
-        raise HTTPException(status_code=404, detail="No hay datos de ventas")
+    history = [{"date": s.date.strftime("%d %b"), "value": s.quantity} for s in reversed(sales)]
 
-    prediction = predict_sales(db, product.name)
+    forecast_results = predict_sales_range(db, product.name, days_to_forecast=30)
 
     return {
-        "labels": [s.date.strftime("%d %b") for s in recent_sales],
-        "values": [s.quantity for s in recent_sales],
-        "prediction": prediction,
+        "history": history,
+        "forecast": forecast_results,
         "product_name": product.name
     }

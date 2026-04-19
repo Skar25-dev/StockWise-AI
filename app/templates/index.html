@@ -1,125 +1,163 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{{ app_name }} - Dashboard</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_name }} - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+</head>
 
-    <body>
-        <header class="hero mb-5 shadow-sm">
-            <div class="container text-center">
-                <h1><i class="bi bi-cpu-fill me-2"></i> StockWise AI</h1>
-                <p class="lead opacity-75">Predicción de Demanda mediante Inteligencia Artificial</p>
-            </div>
-        </header>
+<body>
+    <header class="hero mb-5 shadow-sm">
+        <div class="container text-center">
+            <h1><i class="bi bi-cpu-fill me-2"></i> StockWise AI</h1>
+            <p class="lead opacity-75">Predicción de Demanda mediante Inteligencia Artificial</p>
+        </div>
+    </header>
 
-        <main class="container">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card p-4 h-100">
-                        <h5 class="fw-bold mb-4">
-                            <i class="bi bi-box-seam card-title-icon"></i>Producto
-                        </h5>
+    <main class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card p-4 h-100">
+                    <h5 class="fw-bold mb-4">
+                        <i class="bi bi-box-seam card-title-icon"></i>Producto
+                    </h5>
+                    
+                    <label class="form-label small text-muted">Selecciona el artículo a analizar:</label>
+                    <select id="productSelect" class="form-select form-select-lg mb-4" onchange="loadData()">
+                        {% for p in products %}
+                        <option value="{{ p.id }}">{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <div class="prediction-box text-center shadow-sm">
+                        <div class="prediction-label" id="predictionLabel">Venta Estimada (Mañana)</div>
+                        <div id="predValue" class="prediction-value">--</div>
                         
-                        <label class="form-label small text-muted">Selecciona el artículo a analizar:</label>
-                        <select id="productSelect" class="form-select form-select-lg mb-4" onchange="loadData()">
-                            {% for p in products %}
-                            <option value="{{ p.id }}">{{ p.name }}</option>
-                            {% endfor %}
-                        </select>
+                        <div class="mt-4">
+                            <label class="form-label small text-muted">Horizonte de Predicción</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="horizon" id="h24" value="1" checked onchange="updateView()">
+                                <label class="btn btn-outline-primary" for="h24">24 Horas</label>
 
-                        <div class="prediction-box text-center shadow-sm">
-                            <div class="prediction-label">Venta Estimada (Próximas 24h)</div>
-                            <div id="predValue" class="prediction-value">--</div>
-                            <span class="badge badge-ai rounded-pill">
-                                <i class="bi bi-stars"></i> Inferencia del Modelo
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-8">
-                    <div class="card p-4 h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="fw-bold m-0">
-                                <i class="bi bi-graph-up-arrow card-title-icon"></i>Análisis de Tendencia
-                            </h5>
-                            <div class="badge bg-light text-dark border p-2">
-                                <i class="bi bi-clock-history me-1"></i> Ventas vs IA
+                                <input type="radio" class="btn-check" name="horizon" id="h30" value="30" onchange="updateView()">
+                                <label class="btn btn-outline-primary" for="h30">30 Días</label>
                             </div>
                         </div>
-
-                        <div class="chart-container">
-                            <canvas id="salesChart"></canvas>
-                        </div>
                     </div>
                 </div>
-
             </div>
-        </main>
 
-        <footer class="main-footer">
-            <p>&copy; 2026 {{ app_name }} | Desarrollado con Python, FastAPI y Machine Learning</p>
-        </footer>
+            <div class="col-md-8">
+                <div class="card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold m-0">
+                            <i class="bi bi-graph-up-arrow card-title-icon"></i>Análisis de Tendencia
+                        </h5>
+                        <div class="badge bg-light text-dark border p-2">
+                            <i class="bi bi-clock-history me-1"></i> Historial vs IA
+                        </div>
+                    </div>
 
-        <script>
-            let myChart
+                    <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+            </div>
 
-            async function loadData() {
-                const productId = document.getElementById('productSelect').value
-                const response = await fetch(`/api/chart-data/${productId}`)
+        </div>
+    </main>
 
-                if (!response.ok) {
-                    console.error("Error al cargar datos de la API")
-                    return
-                }
-                
-                const data = await response.json()
+    <footer class="main-footer">
+        <p>&copy; 2026 {{ app_name }} | Desarrollado con Python, FastAPI y Machine Learning</p>
+    </footer>
 
-                document.getElementById('predValue').innerText = data.prediction
+    <script>
+        let myChart;
+        let globalData;
 
-                if (myChart) { myChart.destroy() }
-                const ctx = document.getElementById('salesChart').getContext('2d')
+        async function loadData() {
+            const productId = document.getElementById('productSelect').value;
+            const response = await fetch(`/api/chart-data/${productId}`);
 
-                myChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: [...data.labels, "Mañana (IA)"],
-                        datasets: [{
-                            label: 'Ventas Realse',
-                            data: data.values,
-                            borderColor: '#306bac',
-                            backgroundColor: 'rgba(48, 107, 172, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        }, {
-                            label: 'Predicción IA',
-                            data: [...Array(data.values.length-1).fill(null), data.values[data.values.ñength-1], data.prediction],
-                            borderColor: '#918ef4',
-                            borderWidth: 3,
-                            borderDash: [6, 6],
-                            pointBackgroundColor: '#918ef4',
-                            pointRadius: 7
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { position: 'top', align: 'end' }},
-                        scales: {
-                            y: { beginAtZero: true },
-                            x: { grid: { display: false } }
-                        }
-                    }
-                })
+            if (!response.ok) {
+                document.getElementById('predValue').innerText = "N/A";
+                console.error("La API devolvió un error. ¿Tienes suficientes datos en la DB?");
+                return;
+            }
+            
+            globalData = await response.json();
+            updateView();
+        }
+
+        function updateView() {
+            if (!globalData || !globalData.history || !globalData.forecast) return;
+
+            const horizon = document.querySelector('input[name="horizon"]:checked').value;
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            const predValueEl = document.getElementById('predValue');
+            const labelEl = document.getElementById('predictionLabel');
+
+            let labels, historyValues, forecastValues, displayPrediction;
+
+            const historyLabels = globalData.history.map(h => h.date);
+            historyValues = globalData.history.map(h => h.value);
+
+            if (horizon === "1") {
+                const tomorrow = globalData.forecast[0];
+                labels = [...historyLabels, tomorrow.date];
+                forecastValues = [...Array(historyValues.length - 1).fill(null), historyValues[historyValues.length - 1], tomorrow.value];
+                displayPrediction = tomorrow.value;
+                labelEl.innerText = "Venta Estimada (Mañana)";
+            } else {
+                const forecastLabels = globalData.forecast.map(f => f.date);
+                const forecastData = globalData.forecast.map(f => f.value);
+                labels = [...historyLabels, ...forecastLabels];
+                forecastValues = [...Array(historyValues.length - 1).fill(null), historyValues[historyValues.length - 1], ...forecastData];
+                displayPrediction = globalData.forecast.reduce((a, b) => a + b.value, 0).toFixed(0);
+                labelEl.innerText = "Demanda Total Mes";
             }
 
-            window.onload = loadData
-        </script>
-    </body>
+            predValueEl.innerText = displayPrediction;
+            if (myChart) { myChart.destroy(); }
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ventas Reales',
+                        data: historyValues,
+                        borderColor: '#306bac',
+                        backgroundColor: 'rgba(48, 107, 172, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Proyección IA',
+                        data: forecastValues,
+                        borderColor: '#918ef4',
+                        borderWidth: 3,
+                        borderDash: [6, 6],
+                        pointBackgroundColor: '#918ef4',
+                        pointRadius: horizon === "1" ? 7 : 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', align: 'end' }},
+                    scales: {
+                        y: { beginAtZero: true },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
 </html>

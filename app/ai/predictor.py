@@ -1,7 +1,7 @@
 import joblib
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from app.models import Product, DailySale
 from pathlib import Path
@@ -9,32 +9,38 @@ from pathlib import Path
 MODEL_PATH = Path(__file__).resolve().parent / "model_store" / "stock_model.pkl"
 model = joblib.load(MODEL_PATH)
 
-def predict_sales(db: Session, product_name: str):
+def predict_sales_range(db: Session, product_name: str, days_to_forecast: int = 30):
     product = db.query(Product).filter(Product.name == product_name).first()
-    if not product:
-        return None
     
-    last_sales = db.query(DailySale)\
-                .filter(DailySale.product_id == product.id)\
-                .order_by(DailySale.date.desc())\
-                .limit(7).all()
+    last_sales = db.query(DailySale).filter(DailySale.product_id == product.id)\
+                   .order_by(DailySale.date.desc()).limit(7).all()
 
-    if not last_sales:
+    if len(last_sales) < 7:
         return None
 
-    next_date = datetime.now()
+    current_window = [s.quantity for s in reversed(last_sales)]
+    predictions = []
+    future_date = datetime.now() + timedelta(days=1)
 
-    month = next_date.month
-    day_of_week = next_date.weekday()
-    is_weekend = 1 if day_of_week >= 5 else 0
+    for _ in range(days_to_forecast):
+        month = future_date.month
+        day_of_week = future_date.weekday()
+        is_weekend = 1 if day_of_week >= 5 else 0
+        sales_lag_1 = current_window[-1]
+        rolling_mean_7 = np.mean(current_window)
 
-    sales_lag_1 = last_sales[0].quantity # La venta más reciente
-    rolling_mean_7 = np.mean([s.quantity for s in last_sales])
+        input_df = pd.DataFrame([[month, day_of_week, is_weekend, sales_lag_1, rolling_mean_7]],
+                                columns=['month', 'day_of_week', 'is_weekend', 'sales_lag_1', 'rolling_mean_7'])
+        
+        pred = max(0, model.predict(input_df)[0])
+        
+        predictions.append({
+            "date": future_date.strftime("%d %b"),
+            "value": round(float(pred), 2)
+        })
 
-    input_data = pd.DataFrame([[
-        month, day_of_week, is_weekend, sales_lag_1, rolling_mean_7
-    ]], columns=['month', 'day_of_week', 'is_weekend', 'sales_lag_1', 'rolling_mean_7'])
-
-    prediction = model.predict(input_data)[0]
-
-    return round(prediction, 2)
+        current_window.pop(0)
+        current_window.append(pred)
+        future_date += timedelta(days=1)
+    
+    return predictions
