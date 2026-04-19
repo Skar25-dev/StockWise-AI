@@ -2,7 +2,7 @@
 
 # 1. Asegurar que el entorno virtual está activo (opcional si ya lo tienes)
 if [ -d "venv" ]; then
-    source /home/daniel/StockWise-AI/venv/bin/activate
+    source venv/bin/activate
     echo "✅ Entorno virtual activado."
 else
     echo "❌ Error: No se encontró la carpeta venv."
