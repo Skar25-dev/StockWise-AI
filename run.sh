@@ -1,7 +1,13 @@
 #!/bin/bash
 
 # 1. Asegurar que el entorno virtual está activo (opcional si ya lo tienes)
-source venv/bin/activate
+if [ -d "venv" ]; then
+    source /home/daniel/StockWise-AI/venv/bin/activate
+    echo "✅ Entorno virtual activado."
+else
+    echo "❌ Error: No se encontró la carpeta venv."
+    exit 1
+fi
 
 # 2. Configurar el Path para que Python encuentre la carpeta /app
 export PYTHONPATH=$PYTHONPATH:.
