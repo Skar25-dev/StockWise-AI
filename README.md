@@ -56,22 +56,27 @@ Lógica de decisión que recomienda cuántas unidades adquirir para cubrir la de
 
 ```text
 ├── app/
-│   ├── main.py            # API REST y rutas del Dashboard
-│   ├── database.py        # Conexión SQLite con rutas absolutas
-│   ├── models.py          # Esquemas de Base de Datos (Product, DailySale)
-│   ├── ai/                # 🧠 Núcleo de Inteligencia Artificial
-│   │   ├── trainer.py     # Script de entrenamiento y validación
-│   │   ├── predictor.py   # Lógica de inferencia y recursividad
-│   │   └── model_store/   # Modelos entrenados (.pkl)
-│   ├── services/          # Lógica de negocio y stock
-│   ├── templates/         # Interfaz Web (Jinja2)
+│   ├── main.py            # Dashboard, API de predicción y lógica de inventario
+│   ├── database.py        # Configuración de SQLite con rutas absolutas
+│   ├── models.py          # Modelos de datos (Product y DailySale)
+│   ├── ai/                # 🧠 Núcleo de Machine Learning
+│   │   ├── feature_engineer.py # Transformación de datos (Lags y Medias móviles)
+│   │   ├── trainer.py     # Script de entrenamiento y evaluación del modelo
+│   │   ├── predictor.py   # Motor de inferencia y proyecciones de 30 días
+│   │   └── model_store/   # Carpeta para el modelo entrenado (.pkl)
+│   ├── services/          # Lógica de cálculo de stock y compras sugeridas
+│   ├── templates/         # 📄 Vistas HTML (Dashboard dinámico con Jinja2)
 │   └── static/            
-│       └── css/           # Estilos "Tech" personalizados
-├── data/                  # Almacenamiento de DB y Datasets
-├── generate_data.py       # Generador de datos inteligentes (Tendencias)
-├── run.sh                 # Script de arranque rápido
-├── requirements.txt       # Dependencias del proyecto
-└── README.md
+│       └── css/           # Estilos visuales personalizados (Tech Style)
+├── data/                  # Almacenamiento de la base de datos y datasets
+├── docs/                  # 📸 Documentación visual
+│   └── screenshots/       # Capturas de pantalla (Dashboard, Alertas, IA)
+├── generate_data.py       # Script para simular mercado con tendencias reales
+├── verify_patterns.py     # Script de análisis estadístico previo a la IA
+├── run.sh                 # Script de arranque rápido y activación de entorno
+├── requirements.txt       # Dependencias (Scikit-Learn, FastAPI, Pandas...)
+├── .gitignore             # Filtro de archivos para el repositorio
+└── README.md              # Documentación técnica maestra
 ```
 
 ## 🧪 Ciencia de Datos y Rendimiento
