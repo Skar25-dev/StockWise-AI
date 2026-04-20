@@ -1,4 +1,7 @@
-:root {
+/* =========================================
+   1. VARIABLES Y CONFIGURACIÓN GLOBAL
+   ========================================= */
+   :root {
     --deep-navy: #141b41;
     --corporate-blue: #306bac;
     --bright-blue: #6f9ceb;
@@ -16,6 +19,9 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+/* =========================================
+   2. CABECERA (HERO SECTION)
+   ========================================= */
 .hero {
     background: var(--main-gradient);
     color: var(--white);
@@ -28,6 +34,9 @@ body {
     letter-spacing: -1px;
 }
 
+/* =========================================
+   3. COMPONENTES (CARDS)
+   ========================================= */
 .card {
     border: none;
     border-radius: 20px;
@@ -68,11 +77,39 @@ body {
     margin: 0.5rem 0;
 }
 
-.badge-ai {
-    background-color: var(--tech-violet) !important;
-    padding: 0.5rem 1rem !important;
+/* =========================================
+   4. ASISTENTE DE STOCK
+   ========================================= */
+.recommendation-box {
+    background: rgba(48, 107, 172, 0.05);
+    border: 1px dashed var(--corporate-blue);
+    border-radius: 12px;
+    padding: 12px 15px;
 }
 
+#buyValue {
+    color: var(--corporate-blue);
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.bg-critical { background-color: #dc3545 !important; } 
+.bg-low { background-color: #ffc107 !important; } 
+.bg-optimal { background-color: #198754 !important; } 
+
+.status-badge {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 8px;
+}
+
+/* =========================================
+   5. GRÁFICAS Y FORMULARIOS
+   ========================================= */
 .chart-container {
     position: relative;
     height: 350px;
@@ -86,11 +123,9 @@ body {
     font-weight: 600;
 }
 
-.form-select-lg:focus {
-    border-color: var(--tech-violet);
-    box-shadow: 0 0 0 0.25rem rgba(145, 142, 244, 0.2);
-}
-
+/* =========================================
+   6. FOOTER Y UTILIDADES
+   ========================================= */
 .main-footer {
     text-align: center;
     margin-top: 3rem;
@@ -108,4 +143,8 @@ body {
 @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
+}
+
+.transition-all {
+    transition: all 0.3s ease;
 }

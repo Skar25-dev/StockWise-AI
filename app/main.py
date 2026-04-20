@@ -44,16 +44,51 @@ async def get_chart_data(product_id: int, db: Session = Depends(get_db)):
     sales = db.query(DailySale).filter(DailySale.product_id == product_id)\
               .order_by(DailySale.date.desc()).limit(15).all()
     
-    if len(sales) < 7:
-        print(f"⚠️ Error: El producto '{product.name}' solo tiene {len(sales)} ventas. Necesita 7 para la IA.")
-        raise HTTPException(status_code=404, detail="Datos insuficientes")
+    history = [{"date": s.date.strftime("%d  %b"), "value": s.quantity} for s in reversed(sales)]
+    forecast = predict_sales_range(db, product.name, days_to_forecast=30)
+    
+    tomorrow_demand = forecast[0]['value']
+    month_demand = sum([f['value'] for f in forecast])
+    current_stock = product.current_stock
 
-    history = [{"date": s.date.strftime("%d %b"), "value": s.quantity} for s in reversed(sales)]
+    day_status = "ÓPTIMO"
+    day_color = "optimal"
+    day_rec = 0
 
-    forecast_results = predict_sales_range(db, product.name, days_to_forecast=30)
+    if current_stock < tomorrow_demand:
+        day_status = "CRÍTICO (Agotado mañana)"
+        day_color = "critical"
+        day_rec = int(tomorrow_demand * 1.5 - current_stock) # Pedido de urgencia
+    
+    month_status = "ÓPTIMO"
+    month_color = "optimal"
+    month_safety = month_demand * 1.2 # Stock deseado (demanda + 20% de seguridad)
+    month_rec = max(0, int(month_safety - current_stock))
 
+    if current_stock < (month_demand * 0.5):
+        month_status = "CRÍTICO (Rotura este mes)"
+        month_color = "critical"
+    elif current_stock < month_demand:
+        month_status = "BAJO (No cubre el mes)"
+        month_color = "low"
+    
     return {
         "history": history,
-        "forecast": forecast_results,
-        "product_name": product.name
+        "forecast": forecast,
+        "product_name": product.name,
+        "inventory": {
+            "current": current_stock,
+            "day": {
+                "status": day_status,
+                "color": day_color,
+                "recommendation": day_rec,
+                "demand": round(tomorrow_demand, 1)
+            },
+            "month": {
+                "status": month_status,
+                "color": month_color,
+                "recommendation": month_rec,
+                "demand": round(month_demand)
+            }
+        }
     }
