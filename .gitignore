@@ -4,3 +4,11 @@ __pycache__/
 *.db
 data/*.csv
 .env
+
+# Entornos y caches adicionales
+.venv/
+.pytest_cache/
+.idea/
+.vscode/
+.DS_Store
+*.log
