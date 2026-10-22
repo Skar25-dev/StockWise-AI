@@ -1,15 +1,24 @@
-import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from pathlib import Path
-from app.database import SessionLocal, engine
+from app.database import SessionLocal, engine, Base
 from app.models import Product, DailySale
-from app.ai.predictor import predict_sales_range
+from app.ai.predictor import predict_sales_range, ModelNotTrainedError
 
-app = FastAPI(title="StockWise AI Dashboard")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Crea las tablas si no existen (no borra datos): necesario en un entorno
+    # nuevo, p. ej. un contenedor con PostgreSQL vacío.
+    Base.metadata.create_all(bind=engine)
+    yield
+
+
+app = FastAPI(title="StockWise AI Dashboard", lifespan=lifespan)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = BASE_DIR / "app" / "templates"
@@ -45,8 +54,14 @@ async def get_chart_data(product_id: int, db: Session = Depends(get_db)):
               .order_by(DailySale.date.desc()).limit(15).all()
     
     history = [{"date": s.date.strftime("%d  %b"), "value": s.quantity} for s in reversed(sales)]
-    forecast = predict_sales_range(db, product.name, days_to_forecast=30)
-    
+    try:
+        forecast = predict_sales_range(db, product.name, days_to_forecast=30)
+    except ModelNotTrainedError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+    if not forecast:
+        raise HTTPException(status_code=400, detail="Datos insuficientes (se necesitan al menos 7 días de ventas)")
+
     tomorrow_demand = forecast[0]['value']
     month_demand = sum([f['value'] for f in forecast])
     current_stock = product.current_stock

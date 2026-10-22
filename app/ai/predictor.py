@@ -7,11 +7,39 @@ from app.models import Product, DailySale
 from pathlib import Path
 
 MODEL_PATH = Path(__file__).resolve().parent / "model_store" / "stock_model.pkl"
-model = joblib.load(MODEL_PATH)
+
+_model = None
+
+
+class ModelNotTrainedError(RuntimeError):
+    """No existe el modelo entrenado (ejecuta `python -m app.ai.trainer`)."""
+
+
+def get_model():
+    """Carga el modelo bajo demanda (y lo cachea). Devuelve None si no existe.
+
+    Antes se cargaba al importar el módulo, así que en un clon nuevo (el .pkl
+    no se versiona) la aplicación entera fallaba al arrancar.
+    """
+    global _model
+    if _model is None:
+        if not MODEL_PATH.exists():
+            return None
+        _model = joblib.load(MODEL_PATH)
+    return _model
+
 
 def predict_sales_range(db: Session, product_name: str, days_to_forecast: int = 30):
+    model = get_model()
+    if model is None:
+        raise ModelNotTrainedError(
+            "El modelo de IA no está entrenado. Ejecuta: python -m app.ai.trainer"
+        )
+
     product = db.query(Product).filter(Product.name == product_name).first()
-    
+    if not product:
+        return None
+
     last_sales = db.query(DailySale).filter(DailySale.product_id == product.id)\
                    .order_by(DailySale.date.desc()).limit(7).all()
 
