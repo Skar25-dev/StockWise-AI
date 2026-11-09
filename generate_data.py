@@ -4,17 +4,21 @@ from datetime import datetime, timedelta
 from app.database import SessionLocal, engine, Base
 from app.models import Product, DailySale
 
-Base.metadata.create_all(bind=engine)
-db = SessionLocal()
-
-def seed_smart_data():
+def seed_smart_data(db=None):
+    Base.metadata.create_all(bind=engine)
+    db = db or SessionLocal()
     products_config = [
         {"name": "Consola NextGen", "cat": "Electrónica", "base": 15, "trend": 0.02, "season": 1.0}, # Sube un 2% cada mes
         {"name": "Piscina Inflable", "cat": "Hogar", "base": 2, "trend": 0, "season": "summer"}, # Solo vende en verano
         {"name": "Café Premium", "cat": "Alimentos", "base": 20, "trend": 0, "season": 1.0}, # Estable
     ]
 
+    # Limpia datos previos (ventas primero por la clave foránea). Antes solo se
+    # borraban las ventas, así que ejecutar el script dos veces fallaba por el
+    # nombre de producto único.
     db.query(DailySale).delete()
+    db.query(Product).delete()
+    db.expunge_all()  # evita objetos obsoletos en la sesión (los ids se reutilizan)
 
     for p_conf in products_config:
         p = Product(

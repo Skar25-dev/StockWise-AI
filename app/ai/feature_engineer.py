@@ -1,9 +1,9 @@
 import pandas as pd
-from sqlalchemy import create_engine
-from app.database import DB_PATH
+from app.database import engine as default_engine
 
-def prepare_features():
-    engine = create_engine(f"sqlite:///{DB_PATH}")
+def prepare_features(bind=None):
+    # Usa el mismo motor que la app (SQLite o PostgreSQL según DATABASE_URL)
+    engine = bind if bind is not None else default_engine
     query = """
     SELECT ds.date, ds.quantity, p.name as product_name
     FROM daily_sales ds

@@ -57,7 +57,7 @@ Lógica de decisión que recomienda cuántas unidades adquirir para cubrir la de
 ```text
 ├── app/
 │   ├── main.py            # Dashboard, API de predicción y lógica de inventario
-│   ├── database.py        # Configuración de SQLite con rutas absolutas
+│   ├── database.py        # SQLite por defecto; PostgreSQL si defines DATABASE_URL
 │   ├── models.py          # Modelos de datos (Product y DailySale)
 │   ├── ai/                # 🧠 Núcleo de Machine Learning
 │   │   ├── feature_engineer.py # Transformación de datos (Lags y Medias móviles)
@@ -68,13 +68,19 @@ Lógica de decisión que recomienda cuántas unidades adquirir para cubrir la de
 │   ├── templates/         # 📄 Vistas HTML (Dashboard dinámico con Jinja2)
 │   └── static/            
 │       └── css/           # Estilos visuales personalizados (Tech Style)
-├── data/                  # Almacenamiento de la base de datos y datasets
+├── data/                  # Base de datos SQLite local (se crea sola, no se versiona)
+├── tests/                 # 🧪 Tests automatizados (pytest)
 ├── docs/                  # 📸 Documentación visual
 │   └── screenshots/       # Capturas de pantalla (Dashboard, Alertas, IA)
-├── generate_data.py       # Script para simular mercado con tendencias reales
+├── .github/workflows/     # CI: tests + build de la imagen Docker
+├── Dockerfile             # Imagen de la aplicación
+├── docker-compose.yml     # App + PostgreSQL
+├── .env.example           # Plantilla de credenciales para docker compose
+├── generate_data.py       # Script para simular mercado con tendencias reales (borra los datos existentes)
 ├── verify_patterns.py     # Script de análisis estadístico previo a la IA
 ├── run.sh                 # Script de arranque rápido y activación de entorno
-├── requirements.txt       # Dependencias (Scikit-Learn, FastAPI, Pandas...)
+├── requirements.txt       # Dependencias de producción (Scikit-Learn, FastAPI, Pandas...)
+├── requirements-dev.txt   # Dependencias de desarrollo (pytest, httpx)
 ├── .gitignore             # Filtro de archivos para el repositorio
 └── README.md              # Documentación técnica maestra
 ```
@@ -91,8 +97,32 @@ El modelo ha sido entrenado y validado siguiendo estándares profesionales:
 1. **Entorno:** `python -m venv venv` y `source venv/bin/activate`
 2. **Dependencias:** `pip install -r requirements.txt`
 3. **Generar Datos:** `export PYTHONPATH=$PYTHONPATH:.` y `python generate_data.py`
-4. **Entrenar IA:** `python app/ai/trainer.py`
+4. **Entrenar IA:** `python -m app.ai.trainer`
 5. **Iniciar Dashboard:** `./run.sh`
+
+Si no entrenas el modelo, el dashboard carga pero las predicciones devuelven un error 503 con el mensaje de qué hacer.
+
+### 🐳 Con Docker (app + PostgreSQL)
+
+```bash
+cp .env.example .env          # rellena POSTGRES_PASSWORD (sin caracteres especiales)
+docker compose up --build
+docker compose exec app python generate_data.py     # datos de demo (borra los existentes)
+docker compose exec app python -m app.ai.trainer    # entrena el modelo
+```
+
+El dashboard queda en `http://localhost:8000`. Las tablas se crean al arrancar y el modelo entrenado
+se guarda en un volumen, así que sobrevive a reinicios del contenedor.
+
+### 🧪 Tests
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+Los tests usan SQLite en memoria y una carpeta temporal para el modelo: no tocan tus datos. GitHub Actions
+los ejecuta en cada push y pull request.
 
 ## 📓 Notas de Desarrollo
 Este proyecto demuestra la capacidad de integrar **Machine Learning** en aplicaciones web funcionales. A diferencia de un modelo estático en un Jupyter Noteboo, StockWise AI es un **producto listo para el usuario final**, enfocado en la optimización de costes y la eficiencia logística.
